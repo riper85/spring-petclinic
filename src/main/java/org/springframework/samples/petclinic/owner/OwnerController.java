@@ -15,24 +15,20 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.validation.Valid;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.samples.petclinic.visit.VisitRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 /**
@@ -53,6 +49,14 @@ class OwnerController {
 	public OwnerController(OwnerRepository clinicService, VisitRepository visits) {
 		this.owners = clinicService;
 		this.visits = visits;
+	}
+
+	@ModelAttribute("sortBy")
+	public Collection<String> sortBy() {
+		Collection<String> sortBy = new LinkedList<>();
+		sortBy.add("Asc");
+		sortBy.add("Desc");
+		return sortBy;
 	}
 
 	@InitBinder
@@ -85,8 +89,9 @@ class OwnerController {
 	}
 
 	@GetMapping("/owners")
-	public String processFindForm(@RequestParam(defaultValue = "1") int page, Owner owner, BindingResult result,
-			Model model) {
+	public String processFindForm(@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "") String sortField, @RequestParam(defaultValue = "") String sortDir,
+			Owner owner, BindingResult result, Model model) {
 
 		// allow parameterless GET request for /owners to return all records
 		if (owner.getLastName() == null) {
@@ -95,7 +100,8 @@ class OwnerController {
 
 		// find owners by last name
 		String lastName = owner.getLastName();
-		Page<Owner> ownersResults = findPaginatedForOwnersLastName(page, lastName);
+		Page<Owner> ownersResults = findPaginatedForOwnersLastName(page, lastName, sortField, sortDir);
+
 		if (ownersResults.isEmpty()) {
 			// no owners found
 			result.rejectValue("lastName", "notFound", "not found");
@@ -113,6 +119,36 @@ class OwnerController {
 		}
 	}
 
+	// @GetMapping("/owners")
+	// public String processFindForm(@RequestParam(defaultValue = "1") int page, Owner
+	// owner, BindingResult result,
+	// Model model) {
+	//
+	// // allow parameterless GET request for /owners to return all records
+	// if (owner.getLastName() == null) {
+	// owner.setLastName(""); // empty string signifies broadest possible search
+	// }
+	//
+	// // find owners by last name
+	// String lastName = owner.getLastName();
+	// Page<Owner> ownersResults = findPaginatedForOwnersLastName(page, lastName);
+	// if (ownersResults.isEmpty()) {
+	// // no owners found
+	// result.rejectValue("lastName", "notFound", "not found");
+	// return "owners/findOwners";
+	// }
+	// else if (ownersResults.getTotalElements() == 1) {
+	// // 1 owner found
+	// owner = ownersResults.iterator().next();
+	// return "redirect:/owners/" + owner.getId();
+	// }
+	// else {
+	// // multiple owners found
+	// lastName = owner.getLastName();
+	// return addPaginationModel(page, model, lastName, ownersResults);
+	// }
+	// }
+
 	private String addPaginationModel(int page, Model model, String lastName, Page<Owner> paginated) {
 		model.addAttribute("listOwners", paginated);
 		List<Owner> listOwners = paginated.getContent();
@@ -123,12 +159,23 @@ class OwnerController {
 		return "owners/ownersList";
 	}
 
-	private Page<Owner> findPaginatedForOwnersLastName(int page, String lastname) {
+	// private Page<Owner> findPaginatedForOwnersLastName(int page, String lastname) {
+	// return findPaginatedForOwnersLastName(page, lastname, null, null);
+	// }
 
+	private Page<Owner> findPaginatedForOwnersLastName(int page, String lastname, String orderBy, String sortDir) {
 		int pageSize = 5;
-		Pageable pageable = PageRequest.of(page - 1, pageSize);
-		return owners.findByLastName(lastname, pageable);
+		Pageable pageable;
 
+		if (!orderBy.isEmpty() && !sortDir.isEmpty()) {
+			Sort by = (sortDir.equalsIgnoreCase("asc")) ? Sort.by(orderBy).ascending() : Sort.by(orderBy).descending();
+			pageable = PageRequest.of(page - 1, pageSize, by);
+		}
+		else {
+			pageable = PageRequest.of(page - 1, pageSize);
+		}
+
+		return owners.findByLastName(lastname, pageable);
 	}
 
 	@GetMapping("/owners/{ownerId}/edit")

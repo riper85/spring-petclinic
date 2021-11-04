@@ -4,12 +4,16 @@
 
 <body>
 
-<h2>Owners</h2>
+  <h2 style="display:inline-block;">Owners</h2>
+<!--  <input class="pull-right"-->
+<!--         th:replace="~{fragments/sortingField :: select ('Sort order:', 'sortBy', ${sortBy}, 'owners')}" />-->
 
 <table id="owners" class="table table-striped">
   <thead>
   <tr>
-    <th style="width: 150px;">Name</th>
+    <th style="width: 150px;">
+      <a th:href="@{'/owners?page=' + ${currentPage} + '&sortField=lastName&sortDir=' + ${sortDir}}">Name</a>
+    </th>
     <th style="width: 200px;">Address</th>
     <th>City</th>
     <th style="width: 120px">Telephone</th>
@@ -31,8 +35,8 @@
 <div th:if="${totalPages > 1}">
   <span>Pages:</span>
   <span>[</span>
-  <span th:each="i: ${#numbers.sequence(1, totalPages)}">
-      <a th:if="${currentPage != i}" th:href="@{'/owners/' + ${i}}">[[${i}]]</a>
+    <span th:each="i: ${#numbers.sequence(1, totalPages)}">
+      <a th:if="${currentPage != i}" th:href="@{'/owners/?page=' + ${i}}">[[${i}]]</a>
       <span th:unless="${currentPage != i}">[[${i}]]</span>
     </span>
   <span>]&nbsp;</span>
