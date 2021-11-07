@@ -131,6 +131,7 @@ class ClinicServiceTests {
 		owner.setAddress("4, Evans Street");
 		owner.setCity("Wollongong");
 		owner.setTelephone("4444444444");
+		owner.setEmail("sam_schultz@gmail.com");
 		this.owners.save(owner);
 		assertThat(owner.getId().longValue()).isNotEqualTo(0);
 

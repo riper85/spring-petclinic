@@ -12,7 +12,7 @@
   <thead>
   <tr>
     <th style="width: 150px;">
-      <a th:href="@{'/owners?page=' + ${currentPage} + '&sortField=lastName&sortDir=' + ${sortDir}}">Name</a>
+      <a th:href="@{'/owners?page='+${currentPage}+'&sortField=lastName&sortDir='+${sortDir == 'ASC' ? 'DESC': 'ASC'} }">Name</a>
     </th>
     <th style="width: 200px;">Address</th>
     <th>City</th>

@@ -16,9 +16,12 @@
 package org.springframework.samples.petclinic.owner;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +43,11 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 class OwnerController {
 
+	private static final Logger logger = LoggerFactory.getLogger(OwnerController.class);
+
 	private static final String VIEWS_OWNER_CREATE_OR_UPDATE_FORM = "owners/createOrUpdateOwnerForm";
+
+	private static final int RECORDS_PER_PAGE = 5;
 
 	private final OwnerRepository owners;
 
@@ -100,7 +107,8 @@ class OwnerController {
 
 		// find owners by last name
 		String lastName = owner.getLastName();
-		Page<Owner> ownersResults = findPaginatedForOwnersLastName(page, lastName, sortField, sortDir);
+		PageRequest pageRequest = buildPageRequest(page, sortField, sortDir);
+		Page<Owner> ownersResults = findPaginatedForOwnersLastName(lastName, pageRequest);
 
 		if (ownersResults.isEmpty()) {
 			// no owners found
@@ -119,36 +127,6 @@ class OwnerController {
 		}
 	}
 
-	// @GetMapping("/owners")
-	// public String processFindForm(@RequestParam(defaultValue = "1") int page, Owner
-	// owner, BindingResult result,
-	// Model model) {
-	//
-	// // allow parameterless GET request for /owners to return all records
-	// if (owner.getLastName() == null) {
-	// owner.setLastName(""); // empty string signifies broadest possible search
-	// }
-	//
-	// // find owners by last name
-	// String lastName = owner.getLastName();
-	// Page<Owner> ownersResults = findPaginatedForOwnersLastName(page, lastName);
-	// if (ownersResults.isEmpty()) {
-	// // no owners found
-	// result.rejectValue("lastName", "notFound", "not found");
-	// return "owners/findOwners";
-	// }
-	// else if (ownersResults.getTotalElements() == 1) {
-	// // 1 owner found
-	// owner = ownersResults.iterator().next();
-	// return "redirect:/owners/" + owner.getId();
-	// }
-	// else {
-	// // multiple owners found
-	// lastName = owner.getLastName();
-	// return addPaginationModel(page, model, lastName, ownersResults);
-	// }
-	// }
-
 	private String addPaginationModel(int page, Model model, String lastName, Page<Owner> paginated) {
 		model.addAttribute("listOwners", paginated);
 		List<Owner> listOwners = paginated.getContent();
@@ -156,26 +134,30 @@ class OwnerController {
 		model.addAttribute("totalPages", paginated.getTotalPages());
 		model.addAttribute("totalItems", paginated.getTotalElements());
 		model.addAttribute("listOwners", listOwners);
+
+		String sort = paginated.getSort().stream().map(order -> "" + order.getDirection())
+				.collect(Collectors.joining(","));
+
+		model.addAttribute("sortDir", sort);
+		logger.info(model.toString());
 		return "owners/ownersList";
 	}
 
-	// private Page<Owner> findPaginatedForOwnersLastName(int page, String lastname) {
-	// return findPaginatedForOwnersLastName(page, lastname, null, null);
-	// }
+	private Page<Owner> findPaginatedForOwnersLastName(String lastname, PageRequest pageRequest) {
+		return owners.findByLastName(lastname, pageRequest);
+	}
 
-	private Page<Owner> findPaginatedForOwnersLastName(int page, String lastname, String orderBy, String sortDir) {
-		int pageSize = 5;
-		Pageable pageable;
+	private PageRequest buildPageRequest(int page, String orderBy, String sortDir) {
+		PageRequest pageRequest = PageRequest.of(page - 1, RECORDS_PER_PAGE);
 
 		if (!orderBy.isEmpty() && !sortDir.isEmpty()) {
-			Sort by = (sortDir.equalsIgnoreCase("asc")) ? Sort.by(orderBy).ascending() : Sort.by(orderBy).descending();
-			pageable = PageRequest.of(page - 1, pageSize, by);
-		}
-		else {
-			pageable = PageRequest.of(page - 1, pageSize);
+			Sort byOrder = (sortDir.equalsIgnoreCase("asc")) ? Sort.by(orderBy).ascending()
+					: Sort.by(orderBy).descending();
+
+			pageRequest = pageRequest.withSort(byOrder);
 		}
 
-		return owners.findByLastName(lastname, pageable);
+		return pageRequest;
 	}
 
 	@GetMapping("/owners/{ownerId}/edit")
