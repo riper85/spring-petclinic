@@ -35,6 +35,18 @@ public class Person extends BaseEntity {
 	@NotEmpty
 	private String lastName;
 
+	@Column(name = "email")
+	@NotEmpty
+	private String email;
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
 	public String getFirstName() {
 		return this.firstName;
 	}

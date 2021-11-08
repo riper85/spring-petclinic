@@ -272,6 +272,11 @@
           </dependency>
         </dependencies>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>3.8.2</version>
+      </plugin>
     </plugins>
   </build>
 
@@ -387,6 +392,36 @@
         </pluginManagement>
       </build>
     </profile>
+    <profile>
+      <id>test</id>
+      <properties>
+        <env>test</env>
+        <gebEnv>test</gebEnv>
+        <jacoco.skip>false</jacoco.skip>
+        <maven.test.skip>false</maven.test.skip>
+        <skip.unit.tests>false</skip.unit.tests>
+      </properties>
+    </profile>
   </profiles>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-report-plugin</artifactId>
+        <version>3.0.0-M5</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-project-info-reports-plugin</artifactId>
+        <version>3.1.2</version>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.6</version>
+      </plugin>
+    </plugins>
+  </reporting>
 
 </project>

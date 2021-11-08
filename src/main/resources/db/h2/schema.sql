@@ -10,8 +10,10 @@ DROP TABLE owners IF EXISTS;
 CREATE TABLE vets (
   id         INTEGER IDENTITY PRIMARY KEY,
   first_name VARCHAR(30),
-  last_name  VARCHAR(30)
+  last_name  VARCHAR(30),
+  email  VARCHAR(100)
 );
+CREATE INDEX vets_email ON vets (email);
 CREATE INDEX vets_last_name ON vets (last_name);
 
 CREATE TABLE specialties (
@@ -39,9 +41,11 @@ CREATE TABLE owners (
   last_name  VARCHAR_IGNORECASE(30),
   address    VARCHAR(255),
   city       VARCHAR(80),
-  telephone  VARCHAR(20)
+  telephone  VARCHAR(20),
+  email  VARCHAR(100)
 );
 CREATE INDEX owners_last_name ON owners (last_name);
+CREATE INDEX owners_email ON owners (email);
 
 CREATE TABLE pets (
   id         INTEGER IDENTITY PRIMARY KEY,
